@@ -1,0 +1,27 @@
+name = 'SuperLU_DIST'
+version = '6.1.1'
+
+homepage = 'http://crd-legacy.lbl.gov/~xiaoye/SuperLU/'
+description = """SuperLU is a general purpose library for the direct solution of 
+large, sparse, nonsymmetric systems of linear equations on high performance machines."""
+
+toolchain = {'name': 'intel', 'version': '2019a'}
+toolchainopts = {'usempi': True, 'pic': True}
+
+source_urls = ['http://crd-legacy.lbl.gov/~xiaoye/SuperLU/']
+sources = ["superlu_dist_%(version)s.tar.gz"]
+checksums = ['4ae956e57aa6c1c3a3a9627f5e464409e9a120e39f3a6e0c75aa021ac37759aa']
+
+configopts = ' -DCMAKE_C_COMPILER=mpiicc -DCMAKE_CXX_COMPILER=mpiicpc'
+configopts += ' -DTPL_PARMETIS_LIBRARIES="${EBROOTPARMETIS}/lib/libparmetis.a;${EBROOTPARMETIS}/lib/libmetis.a"'
+configopts += ' -DBUILD_SHARED_LIBS=On'
+configopts += ' -DTPL_PARMETIS_INCLUDE_DIRS="${EBROOTPARMETIS}/include"'
+configopts += ' -DTPL_ENABLE_BLASLIB=OFF'
+configopts += ' -DTPL_BLAS_LIBRARIES=-mkl'
+configopts += ' -DCMAKE_C_FLAGS="-O3 -g -std=c99"'
+configopts += ' -DCMAKE_CXX_FLAGS="-O3 -g -std=c++11"' 
+
+builddependencies = [('CMake', '3.13.3')]
+dependencies = [('ParMETIS', '4.0.3')]
+
+moduleclass = 'numlib'

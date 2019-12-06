@@ -1,0 +1,51 @@
+name = 'Trilinos'
+version = '12.14.1'
+versionsuffix = '-Python-%(pyver)s'
+
+homepage = 'https://trilinos.org'
+description = """The Trilinos Project is an effort to develop algorithms and enabling technologies
+ within an object-oriented software framework for the solution of large-scale, complex multi-physics
+ engineering and scientific problems. A unique design feature of Trilinos is its focus on packages."""
+
+toolchain = {'name': 'intel', 'version': '2019a'}
+toolchainopts = {'usempi': True, 'pic': True, 'strict': True}
+
+source_urls = [
+    'https://github.com/trilinos/Trilinos/archive/'
+]
+sources = ['%%(namelower)s-release-%s.tar.gz' % version.replace('.', '-')]
+checksums = ['52a4406cca2241f5eea8e166c2950471dd9478ad6741cbb2a7fc8225814616f0']
+
+builddependencies = [
+    ('CMake', '3.13.3'),
+    ('SWIG', '3.0.12', versionsuffix),
+]
+dependencies = [
+    ('Python', '3.7.2'),
+    ('Boost', '1.70.0'),
+    ('Boost.Python', '1.70.0', versionsuffix),
+    ('SCOTCH', '6.0.6'),
+    ('SuiteSparse', '5.4.0', '-METIS-5.1.0'),
+    ('ParMETIS', '4.0.3'),
+    ('netCDF', '4.6.2'),
+    ('MATIO', '1.5.12'),
+    ('GLM', '0.9.9.0'),
+    ('X11', '20190311'),
+    ('HDF5', '1.10.5'),
+    ('SuperLU_DIST', '6.1.1'),
+]
+
+# disable TrilinosCouplings package, doesn't build correctly (examples fail to compile)
+skip_exts = ['TrilinosCouplings']
+all_exts = False
+exts_list = ["Amesos", "Anasazi", "AztecOO", "Belos", "Epetra", "EpetraExt", "Galeri",
+             "Ifpack", "LOCA", "ML", "NOX", "Teuchos", "Teko"]
+
+
+# shared_libs = True
+
+# too parallel is too slow because of memory requirements (results in swapping), and may cause build/tests to fail
+# building with 20 cores seems to require about 100GB of memory (peak usage)
+maxparallel = 10
+
+moduleclass = 'numlib'
