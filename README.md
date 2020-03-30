@@ -1,4 +1,4 @@
-This repository contains EasyBuild scripts required to build Trilinos.
+This repository contains EasyBuild scripts required to build Trilinos 12.14 with SuperLU_DIST support.
 Job scripts are available for Peregrine and Cartesius.
 
 Before you run the script, make sure you don't have your ((LD_)LIBRARY_)PATH set in your .bashrc, since this will make the compilation of the X11 module fail.
@@ -10,8 +10,8 @@ To make sure the modules are actually found after installation in this installat
 export MODULEPATH=$MODULEPATH:/data/$USER/software
 ```
 
-After this you can load the Trilinos module my using
+After this you can load the Trilinos module (and all of its dependencies) by using
 
 ```
-Trilinos/12.14.1-intel-2019a-Python-3.7.2
+module load Trilinos/12.14.1-intel-2019a-Python-3.7.2
 ```
