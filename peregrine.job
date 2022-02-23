@@ -5,5 +5,6 @@
 module purge
 module load EasyBuild
 
+rm -rf $HOME/.local/easybuild
 cd $HOME/easybuild
-eb --installpath=/data/$USER/software --include-easyblocks=*.py -l Trilinos-12.14.1-intel-2019a-Python-3.7.2.eb --robot=$PWD
+eb -f --installpath=/data/$USER/software --include-easyblocks=*.py -l Trilinos-13.0.1-foss-2019b-Python-3.7.4.eb --robot=$PWD

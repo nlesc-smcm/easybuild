@@ -38,8 +38,9 @@ from easybuild.easyblocks.generic.cmakemake import CMakeMake
 from easybuild.framework.easyconfig import CUSTOM
 from easybuild.tools.build_log import EasyBuildError
 from easybuild.tools.config import build_path
-from easybuild.tools.filetools import mkdir, rmtree2, symlink
+from easybuild.tools.filetools import mkdir, remove_dir, symlink
 from easybuild.tools.modules import get_software_root
+from easybuild.tools.py2vs3 import ascii_letters
 from easybuild.tools.systemtools import get_shared_lib_ext
 
 
@@ -51,13 +52,21 @@ class EB_Trilinos(CMakeMake):
     def extra_options():
         """Add extra config options specific to Trilinos."""
         extra_vars = {
-            'shared_libs': [False, "Build shared libs; if False, build static libs", CUSTOM],
-            'openmp': [False, "Enable OpenMP support", CUSTOM],
+            'shared_libs': [None, "Deprecated. Use build_shared_libs", CUSTOM],
+            'openmp': [True, "Enable OpenMP support", CUSTOM],
             'all_exts': [True, "Enable all Trilinos packages", CUSTOM],
             'skip_exts': [[], "List of Trilinos packages to skip", CUSTOM],
             'verbose': [False, "Configure for verbose output", CUSTOM],
         }
         return CMakeMake.extra_options(extra_vars)
+
+    def __init__(self, *args, **kwargs):
+        """Constructor of custom easyblock for Trilinos."""
+        super(EB_Trilinos, self).__init__(*args, **kwargs)
+
+        if self.cfg['shared_libs'] is not None:
+            self.log.deprecated("Use 'build_shared_libs' instead of 'shared_libs' easyconfig parameter", '5.0')
+            self.cfg['build_shared_libs'] = self.cfg['shared_libs']
 
     def configure_step(self):
         """Set some extra environment variables before configuring."""
@@ -92,6 +101,8 @@ class EB_Trilinos(CMakeMake):
         # MPI
         if self.toolchain.options.get('usempi', None):
             self.cfg.update('configopts', "-DTPL_ENABLE_MPI:BOOL=ON")
+            for root in self.toolchain.get_software_root(self.toolchain.MPI_MODULE_NAME or []):
+                self.cfg.update('configopts', "-DMPI_BASE_DIR:FILEPATH=%s" % root)
 
         # shared libraries
         if self.cfg['shared_libs']:
@@ -108,6 +119,9 @@ class EB_Trilinos(CMakeMake):
         # enable full testing
         self.cfg.update('configopts', "-DTrilinos_ENABLE_TESTS:BOOL=OFF")
         self.cfg.update('configopts', "-DTrilinos_ENABLE_ALL_FORWARD_DEP_PACKAGES:BOOL=OFF")
+
+        # Enable complex support
+        self.cfg.update('configopts', "-DTeuchos_ENABLE_COMPLEX=ON")
 
         lib_re = re.compile("^lib(.*).a$")
 
@@ -230,7 +244,7 @@ class EB_Trilinos(CMakeMake):
         # + if the build directory is a long path, problems like "Argument list too long" may occur
         # cfr. https://github.com/trilinos/Trilinos/issues/2434
         # so, try to create build directory with shorter path length to build in
-        salt = ''.join(random.choice(string.letters) for _ in range(5))
+        salt = ''.join(random.choice(ascii_letters) for _ in range(5))
         self.short_start_dir = os.path.join(build_path(), self.name + '-' + salt)
         if os.path.exists(self.short_start_dir):
             raise EasyBuildError("Short start directory %s for Trilinos already exists?!", self.short_start_dir)
@@ -257,16 +271,20 @@ class EB_Trilinos(CMakeMake):
         """Custom sanity check for Trilinos."""
 
         # selection of libraries
-        libs = ["Amesos", "Anasazi", "AztecOO", "Belos", "Epetra", "EpetraExt", "Galeri",
-                "GlobiPack", "Ifpack", "Intrepid", "Isorropia", "Kokkos",
-                "Komplex", "LOCA", "ML", "Moertel", "NOX",
-                "Pamgen", "RTOp", "Rythmos", "Sacado", "Shards", "Stratimikos",
-                "Teko", "Teuchos", "Tpetra", "Triutils", "Zoltan"]
+        # libs = ["Amesos", "Anasazi", "AztecOO", "Belos", "Epetra", "EpetraExt", "Galeri",
+        #         "GlobiPack", "Ifpack", "Intrepid", "Isorropia", "Kokkos",
+        #         "Komplex", "LOCA", "Mesquite", "ML", "Moertel", "MOOCHO", "NOX",
+        #         "Pamgen", "RTOp", "Rythmos", "Sacado", "Shards", "Stratimikos",
+        #         "Teko", "Teuchos", "Tpetra", "Triutils", "Zoltan", "PyTrilinos"]
 
-        if not self.cfg['all_exts']:
-            libs = list(self.cfg['exts_list'])
+        libs = ["Amesos", "Anasazi", "AztecOO", "Belos", "Epetra", "EpetraExt", "Galeri",
+                "Ifpack", "Intrepid", "Kokkos",
+                "Komplex", "LOCA", "ML", "NOX",
+                "Pamgen", "RTOp", "Rythmos", "Sacado", "Shards", "Stratimikos",
+                "Teko", "Teuchos", "Tpetra", "Triutils", "PyTrilinos"]
 
         libs = [l for l in libs if not l in self.cfg['skip_exts']]
+
 
         # Teuchos was refactored in 11.2
         if LooseVersion(self.version) >= LooseVersion('11.2') and  'Teuchos' in libs:
@@ -284,7 +302,7 @@ class EB_Trilinos(CMakeMake):
             libs.extend(['galeri-epetra', 'galeri-xpetra'])
 
         # Get the library extension
-        if self.cfg['shared_libs']:
+        if self.cfg['build_shared_libs']:
             lib_ext = get_shared_lib_ext()
         else:
             lib_ext = 'a'
@@ -298,7 +316,5 @@ class EB_Trilinos(CMakeMake):
 
     def cleanup_step(self):
         """Complete cleanup by also removing custom created short build directory."""
-        rmtree2(self.short_start_dir)
+        remove_dir(self.short_start_dir)
 
-    def extensions_step(self, fetch=False):
-        pass
