@@ -1,0 +1,22 @@
+name = 'SuperLU_DIST'
+version = '7.2.0'
+
+homepage = 'http://crd-legacy.lbl.gov/~xiaoye/SuperLU/'
+description = """SuperLU is a general purpose library for the direct solution of 
+large, sparse, nonsymmetric systems of linear equations on high performance machines."""
+
+toolchain = {'name': 'foss', 'version': '2021a'}
+toolchainopts = {'usempi': True, 'pic': True}
+
+source_urls = ['https://github.com/xiaoyeli/superlu_dist/archive/refs/tags/']
+sources = ["v%(version)s.tar.gz"]
+checksums = ['20b60bd8a3d88031c9ce6511ae9700b7a8dcf12e2fd704e74b1af762b3468b8c']
+
+configopts = ' -DTPL_PARMETIS_LIBRARIES="${EBROOTPARMETIS}/lib/libparmetis.a;${EBROOTPARMETIS}/lib/libmetis.a"'
+configopts += ' -DBUILD_SHARED_LIBS=On'
+configopts += ' -DTPL_PARMETIS_INCLUDE_DIRS="${EBROOTPARMETIS}/include"'
+
+builddependencies = [('CMake', '3.20.1')]
+dependencies = [('ParMETIS', '4.0.3')]
+
+moduleclass = 'numlib'
