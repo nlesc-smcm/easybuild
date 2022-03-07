@@ -40,7 +40,13 @@ dependencies = [
 
 build_shared_libs = True
 
-skip_exts = ['TrilinosCouplings']
+
+# Disable TrilinosCouplings package, doesn't build correctly (examples fail to compile)
+# and Adelus, because it causes linker errors when not using Adelus:
+# /software/software/Trilinos/13.2.0-foss-2021a-Python-3.9.5/lib/libzadelus.so.13.2: error: undefined reference to 'Adelus::nprocs_row'
+# /software/software/Trilinos/13.2.0-foss-2021a-Python-3.9.5/lib/libzadelus.so.13.2: error: undefined reference to 'Adelus::me'
+# /software/software/Trilinos/13.2.0-foss-2021a-Python-3.9.5/lib/libzadelus.so.13.2: error: undefined reference to 'Adelus::nprocs_col'
+skip_exts = ['TrilinosCouplings', 'Adelus']
 
 # too parallel is too slow because of memory requirements (results in
 # swapping), and may cause build/tests to fail building with 20 cores

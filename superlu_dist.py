@@ -90,7 +90,7 @@ class EB_SuperLU_underscore_DIST(CMakeMake):
                 # 'Intel' -> For older versions of mkl 32 and 64 bit
                 self.cfg.update('configopts', '-DBLA_VENDOR="Intel"')
 
-        elif toolchain_blas in ['ACML', 'ATLAS']:
+        elif toolchain_blas in ['ACML', 'ATLAS', 'FlexiBLAS']:
             self.cfg.update('configopts', '-DBLA_VENDOR="%s"' % toolchain_blas)
 
         elif toolchain_blas == 'OpenBLAS':
